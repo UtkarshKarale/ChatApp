@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8" />
+    <title>Sidebar</title>
+</head>
+<body>
+<div id="kt_app_sidebar" class="app-sidebar flex-column bg-dark" data-kt-drawer="true" data-kt-drawer-name="app-sidebar" th:fragment="sidebar">
+    <div class="app-sidebar-logo px-6 pt-8 pb-5" id="kt_app_sidebar_logo">
+        <a href="#">
+            <i class="fas fa-rocket fa-lg text-white"></i>
+        </a>
+    </div>
+    <div class="app-sidebar-menu overflow-hidden flex-column-fluid">
+        <div id="kt_app_sidebar_menu_wrapper" class="app-sidebar-wrapper hover-scroll-overlay-y">
+            <div class="menu menu-column menu-rounded menu-sub-indention px-3" data-kt-menu="true">
+
+                <div class="menu-item">
+                    <a class="menu-link active" href="#">
+                        <span class="menu-icon">
+                            <i class="ki-duotone ki-element-11 fs-2"></i>
+                        </span>
+                        <span class="menu-title">Dashboard</span>
+                    </a>
+                </div>
+                <div class="menu-item">
+                    <a class="menu-link" href="#">
+                        <span class="menu-icon"><i class="ki-duotone ki-globe fs-2"></i></span>
+                        <span class="menu-title">Add Websites</span>
+                    </a>
+                </div>
+
+                <!-- Chat -->
+                <div class="menu-item">
+                    <a class="menu-link" href="/chat">
+                        <span class="menu-icon"><i class="ki-duotone ki-message-text fs-2"></i></span>
+                        <span class="menu-title">Chat</span>
+                    </a>
+                </div>
+
+                <div class="menu-item">
+                    <a class="menu-link" href="/chat-ui">
+                        <span class="menu-icon"><i class="ki-duotone ki-message-text fs-2"></i></span>
+                        <span class="menu-title">ChatUI</span>
+                    </a>
+                </div>
+
+
+                <!-- Company -->
+                <div class="menu-item pt-5">
+                    <div class="menu-content">
+                        <span class="menu-heading fw-bold text-uppercase fs-7 text-gray-500">Company</span>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <a class="menu-link" href="#">
+                        <span class="menu-icon"><i class="ki-duotone ki-office-bag fs-2"></i></span>
+                        <span class="menu-title">Company Setup</span>
+                    </a>
+                </div>
+                <div class="menu-item">
+                    <a class="menu-link" href="#">
+                        <span class="menu-icon"><i class="ki-duotone ki-profile-circle fs-2"></i></span>
+                        <span class="menu-title">Company Profile</span>
+                    </a>
+                </div>
+                <div class="menu-item">
+                    <a class="menu-link" href="#">
+                        <span class="menu-icon"><i class="ki-duotone ki-setting-2 fs-2"></i></span>
+                        <span class="menu-title">Company Settings</span>
+                    </a>
+                </div>
+
+                <!-- User -->
+                <div class="menu-item pt-5">
+                    <div class="menu-content">
+                        <span class="menu-heading fw-bold text-uppercase fs-7 text-gray-500">User</span>
+                    </div>
+                </div>
+                <div class="menu-item">
+                    <a class="menu-link" href="#">
+                        <span class="menu-icon"><i class="ki-duotone ki-user fs-2"></i></span>
+                        <span class="menu-title">Profile</span>
+                    </a>
+                </div>
+                <div class="menu-item">
+                    <a class="menu-link" href="#">
+                        <span class="menu-icon"><i class="ki-duotone ki-setting-3 fs-2"></i></span>
+                        <span class="menu-title">Settings</span>
+                    </a>
+                </div>
+
+                <!-- Pages -->
+                <div class="menu-item pt-5">
+                    <div class="menu-content">
+                        <span class="menu-heading fw-bold text-uppercase fs-7 text-gray-500">Pages</span>
+                    </div>
+                </div>
+                <div class="menu-item">
+                    <a class="menu-link" href="#">
+                        <span class="menu-icon"><i class="ki-duotone ki-pricing fs-2"></i></span>
+                        <span class="menu-title">Plans</span>
+                    </a>
+                </div>
+                <div class="menu-item">
+                    <a class="menu-link" href="#">
+                        <span class="menu-icon"><i class="ki-duotone ki-abstract-26 fs-2"></i></span>
+                        <span class="menu-title">Help</span>
+                    </a>
+                </div>
+                <div class="menu-item">
+                    <a class="menu-link" href="#">
+                        <span class="menu-icon"><i class="ki-duotone ki-information-5 fs-2"></i></span>
+                        <span class="menu-title">About</span>
+                    </a>
+                </div>
+                <div class="menu-item">
+                    <a class="menu-link" href="#">
+                        <span class="menu-icon"><i class="ki-duotone ki-message-text-2 fs-2"></i></span>
+                        <span class="menu-title">Contact</span>
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="app-sidebar-footer d-flex flex-column align-items-center flex-column-auto py-3" id="kt_app_sidebar_footer">
+        <div class="d-flex align-items-center">
+            <a href="#" class="text-gray-500 text-hover-primary">Terms</a>
+            <span class="bullet bullet-dot bg-gray-300 w-5px h-2px mx-2"></span>
+            <a href="#" class="text-gray-500 text-hover-primary">Plans</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

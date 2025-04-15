@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<div th:fragment="head-common" th:remove="tag">
+    <div th:replace="dashboard/style :: styles"></div>
+</div>
+
+<!--<div th:fragment="body-start" th:remove="tag">-->
+<!--    <script>-->
+<!--        var defaultThemeMode = "system";-->
+<!--        var themeMode;-->
+<!--        if (document.documentElement) {-->
+<!--            if (document.documentElement.hasAttribute("data-bs-theme-mode")) {-->
+<!--                themeMode = document.documentElement.getAttribute("data-bs-theme-mode");-->
+<!--            } else {-->
+<!--                if (localStorage.getItem("data-bs-theme") !== null) {-->
+<!--                    themeMode = localStorage.getItem("data-bs-theme");-->
+<!--                } else {-->
+<!--                    themeMode = defaultThemeMode;-->
+<!--                }-->
+<!--            }-->
+<!--            if (themeMode === "system") {-->
+<!--                themeMode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";-->
+<!--            }-->
+<!--            themeMode = "[[${@session.get().displayPreference}]]"-->
+<!--            document.documentElement.setAttribute("data-bs-theme", themeMode);-->
+<!--        }-->
+<!--    </script>-->
+</div>
+
+</html>

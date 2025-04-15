@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<div th:fragment="scripts" th:remove="tag">
+    <script src="https://static.ink.ovh/assets/plugins/global/plugins.bundle.js"></script>
+    <script src="https://static.ink.ovh/assets/js/scripts.bundle.js"></script>
+    <script src="https://static.ink.ovh/assets/plugins/custom/fullcalendar/fullcalendar.bundle.js"></script>
+    <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
+    <script src="https://cdn.amcharts.com/lib/5/xy.js"></script>
+    <script src="https://cdn.amcharts.com/lib/5/percent.js"></script>
+    <script src="https://cdn.amcharts.com/lib/5/radar.js"></script>
+    <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
+    <script src="https://cdn.amcharts.com/lib/5/map.js"></script>
+    <script src="https://cdn.amcharts.com/lib/5/geodata/worldLow.js"></script>
+    <script src="https://cdn.amcharts.com/lib/5/geodata/continentsLow.js"></script>
+    <script src="https://cdn.amcharts.com/lib/5/geodata/usaLow.js"></script>
+    <script src="https://cdn.amcharts.com/lib/5/geodata/worldTimeZonesLow.js"></script>
+    <script src="https://cdn.amcharts.com/lib/5/geodata/worldTimeZoneAreasLow.js"></script>
+    <script src="https://static.ink.ovh/assets/plugins/custom/datatables/datatables.bundle.js"></script>
+    <script src="https://static.ink.ovh/assets/js/widgets.bundle.js"></script>
+    <script src="https://static.ink.ovh/assets/js/custom/widgets.js"></script>
+    <script src="https://static.ink.ovh/assets/js/custom/apps/chat/chat.js"></script>
+    <script src="https://static.ink.ovh/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
+    <script src="https://static.ink.ovh/assets/js/custom/utilities/modals/users-search.js"></script>
+    <script src="https://static.ink.ovh/assets/js/ajax/ajax-support.js" ></script>
+    <script src="https://static.ink.ovh/assets/js/custom/utilities/sortable.js"></script>
+    <script>
+        $(".tw-data-tables").DataTable({
+            "paging": false,
+            "dom": "<'row'" +
+                "<'col-sm-6 d-flex align-items-center justify-conten-start'l>" +
+                "<'col-sm-6 d-flex align-items-center justify-content-end'f>" +
+                ">" +
+
+                "<'table-responsive'tr>" +
+
+                "<'row'" +
+                "<'col-sm-12 col-md-5 d-flex align-items-center justify-content-center justify-content-md-start'i>" +
+                "<'col-sm-12 col-md-7 d-flex align-items-center justify-content-center justify-content-md-end'p>" +
+                ">"
+        });
+
+        function submitEventGenerate(form) {
+            const event = new Event('submit', {
+                bubbles: true,
+                cancelable: true
+            });
+            if (form.dispatchEvent(event)) {
+                form.submit();
+            }
+        }
+
+        var submitButtons = document.querySelectorAll('button[type="submit"]');
+        submitButtons.forEach(button => {
+            button.addEventListener("click", function() {
+                button.setAttribute("data-kt-indicator", "on");
+                setTimeout(function() {
+                    button.removeAttribute("data-kt-indicator");
+                }, 3000);
+            });
+        });
+    </script>
+</div>
+</html>

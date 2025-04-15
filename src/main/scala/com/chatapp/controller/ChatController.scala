@@ -11,7 +11,16 @@ import org.springframework.web.bind.annotation.GetMapping
 class ChatController(private val messagingTemplate: SimpMessagingTemplate) {
 
   @GetMapping(Array("/"))
-  def index: String = "chat"
+  def index: String = "index"
+
+
+  @GetMapping(Array("/chat"))
+  def chat: String = "chat"
+
+
+  @GetMapping(Array("/chat-ui"))
+  def chatUI: String = "chat-ui"
+
 
   @MessageMapping(Array("/chat.sendMessage"))
   @SendTo(Array("/topic/public"))
