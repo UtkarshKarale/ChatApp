@@ -114,7 +114,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="card-body chat-messages" id="chat-messages">
+                        <div class="card-body chat-messages" id="messageArea">
                         </div>
                         <div class="card-footer d-flex gap-3">
                             <input type="text" class="form-control" id="message-input" placeholder="Type your message..." disabled>
@@ -127,96 +127,323 @@
             </div>
         </div>
     </div>
+    <input type="hidden" name="username" id="name" value="John Doe">
 </div>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 
 <div th:replace="dashboard/scripts :: scripts" ></div>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const contacts = document.querySelectorAll('.contact-item');
-        const messageInput = document.getElementById('message-input');
-        const sendBtn = document.getElementById('send-btn');
-        const attachBtn = document.getElementById('attach-btn');
-        const chatMessages = document.getElementById('chat-messages');
-        const selectedContactHeader = document.getElementById('selected-contact-header');
-        
-        let selectedContact = null;
 
-        // Contact selection handler
-        contacts.forEach(contact => {
-            contact.addEventListener('click', function() {
-                // Remove active class from all contacts
-                contacts.forEach(c => c.classList.remove('active'));
-                // Add active class to selected contact
-                this.classList.add('active');
-                
-                // Get contact details
-                const contactName = this.querySelector('span').textContent;
-                const contactInitials = this.querySelector('.text-inverse-primary').textContent;
-                
-                // Update header
-                selectedContactHeader.innerHTML = `
-                    <div class="d-flex align-items-center justify-content-between w-100">
-                        <div class="cursor-pointer symbol symbol-35px">
-                            <div class="symbol symbol-35px">
-                                <div class="symbol-label bg-dark">
-                                    <span class="fs-6 text-inverse-primary">${contactInitials}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <span>${contactName}</span>
-                        <span class="badge badge-success">online</span>
-                    </div>
-                `;
-                
-                // Enable input and buttons
-                messageInput.disabled = false;
-                sendBtn.disabled = false;
-                attachBtn.disabled = false;
-                
-                // Clear chat messages
-                chatMessages.innerHTML = '';
-                
-                // Store selected contact
-                selectedContact = {
-                    id: this.dataset.contactId,
-                    name: contactName
-                };
+    let stompClient = null;
+    let username = null;
+    let debugMode = true; // Set to true to show debug information
+    let connectedUsers = new Set();
+    let currentRecipient = null;
+    let notificationCount = 0;
+    let isPageVisible = true;
+    let notificationPermission = false;
+    let enableNotifications = true;
+    let notifyOnPublic = true;
+    let notifyOnPrivate = true;
+
+    function checkNotificationSupport() {
+        console.log("Checking notification support" +window);
+        console.log(window);
+        if (!("Notification" in window)) {
+            console.log("This browser does not support desktop notifications");
+            // document.getElementById('enableNotifications').disabled = true;
+            return false;
+        }
+        return true;
+     }
+    //  checkNotificationSupport();
+
+     function requestNotificationPermission() {
+            if (!checkNotificationSupport()) return;
+            
+            Notification.requestPermission().then(function(permission) {
+                if (permission === "granted") {
+                    notificationPermission = true;
+                    console.log("Notification permission granted");
+                } else {
+                    notificationPermission = false;
+                    console.log("Notification permission denied");
+                    // document.getElementById('enableNotifications').checked = false;
+                }
             });
-        });
+        }
+    // requestNotificationPermission();
 
-        // Send message handler
-        sendBtn.addEventListener('click', function() {
-            if (messageInput.value.trim() && selectedContact) {
-                const message = messageInput.value.trim();
-                const messageElement = document.createElement('div');
-                messageElement.className = 'message sent';
-                messageElement.textContent = message;
-                chatMessages.appendChild(messageElement);
-                
-                // Clear input
-                messageInput.value = '';
-                
-                // Scroll to bottom
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-                
-                // Simulate received message (for demo)
-                setTimeout(() => {
-                    const replyElement = document.createElement('div');
-                    replyElement.className = 'message received';
-                    replyElement.textContent = `Reply from ${selectedContact.name}`;
-                    chatMessages.appendChild(replyElement);
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
-                }, 1000);
-            }
-        });
 
-        // Enter key handler
-        messageInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendBtn.click();
+    function showNotification(title, body, icon = null) {
+            // if (!notificationPermission) return;
+            
+            const options = {
+                body: body,
+                icon: icon || '/favicon.ico',
+                badge: '/favicon.ico',
+                tag: 'chat-notification',
+                renotify: true
+            };
+
+            
+            const notification = new Notification(title, options);
+            
+            notification.onclick = function() {
+                window.focus();
+                this.close();
+            };
+            
+            // Auto close after 5 seconds
+            setTimeout(() => {
+                notification.close();
+            }, 5000);
+        }
+        // showNotification("Test", "This is a test notification");
+        function connect(event) {
+            console.log("Connecting to WebSocket...");
+            console.log(event);
+            event.preventDefault();
+            username = document.getElementById('name').value.trim();
+            if (username) {
+                // document.getElementById('username-page').classList.add('hidden');
+                // document.getElementById('chat-page').classList.remove('hidden');
+
+                // Request notification permission when joining
+                requestNotificationPermission();
+
+                console.log('Connecting to WebSocket...');
+                let socket = new SockJS('/ws');
+                stompClient = Stomp.over(socket);
+                
+                // Disable debug logging from STOMP
+                stompClient.debug = function(str) {
+                    // Only log connection events
+                    if (str.indexOf('>>> CONNECT') !== -1 || str.indexOf('<<< CONNECTED') !== -1) {
+                        console.log(str);
+                    }
+                };
+                
+                stompClient.connect({}, onConnected, onError);
             }
-        });
-    });
+        }
+
+        
+
+        function onConnected() {
+            console.log('Connected to WebSocket');
+            
+            // Subscribe to public topic
+            console.log('Subscribing to /topic/public');
+            stompClient.subscribe('/topic/public', onMessageReceived);
+            
+            // Subscribe to private messages
+            console.log('Subscribing to /user/queue/private');
+            stompClient.subscribe('/user/queue/private', onPrivateMessageReceived);
+            
+            console.log('Sending join message');
+            const joinMessage = {
+                sender: username,
+                content: '',
+                messageType: 'JOIN'
+            };
+            console.log('Join message: ' + JSON.stringify(joinMessage));
+            stompClient.send("/app/chat.addUser", {}, JSON.stringify(joinMessage));
+        }
+        
+
+        function onError(error) {
+            console.log('Error connecting to WebSocket: ' + error);
+        }
+
+        function sendMessage(event) {
+            event.preventDefault();
+            let messageContent = document.getElementById('message-input').value.trim();
+            console.log("Message content: " + stompClient);
+            if (messageContent && stompClient) {
+            console.log("Message content: " + stompClient);
+                let chatMessage = {
+                    sender: username,
+                    content: messageContent,
+                    messageType: currentRecipient ? 'PRIVATE' : 'CHAT',
+                    recipient: currentRecipient || null
+                };
+                
+                if (currentRecipient) {
+                   
+                    stompClient.send("/app/chat.private", {}, JSON.stringify(chatMessage));
+                } else {
+                   
+                    stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
+                }
+                console.log("Sending message: " + messageContent);
+                document.getElementById('message-input').value = '';
+            }
+        }
+
+        function onMessageReceived(payload) {
+            console.log('Message received: ' + payload.body);
+            let message = JSON.parse(payload.body);
+            
+            if (message.messageType === 'JOIN') {
+                // Add user to the list if not already there
+                if (message.sender !== username && !connectedUsers.has(message.sender)) {
+                    connectedUsers.add(message.sender);
+                    updateUserList();
+                }
+                
+                let messageElement = document.createElement('div');
+                messageElement.classList.add('message', 'received');
+                messageElement.textContent = message.sender + ' joined the chat';
+                document.getElementById('messageArea').appendChild(messageElement);
+            } else if (message.messageType === 'CHAT') {
+                let messageElement = document.createElement('div');
+                messageElement.classList.add('message');
+                
+                if (message.sender === username) {
+                    messageElement.classList.add('sent');
+                } else {
+                    messageElement.classList.add('received');
+                    
+                    // Show notification for received public message if enabled
+                    if (!isPageVisible && notifyOnPublic) {
+                        notificationCount++;
+                        updateNotificationBadge();
+                        showNotification(
+                            'New Message from ' + message.sender,
+                            message.content
+                        );
+                    }
+                }
+                
+                messageElement.textContent = message.sender + ': ' + message.content;
+                document.getElementById('messageArea').appendChild(messageElement);
+            }
+            
+            document.getElementById('messageArea').scrollTop = document.getElementById('messageArea').scrollHeight;
+        }
+        
+        function onPrivateMessageReceived(payload) {
+            console.log('Private message received: ' + payload.body);
+            let message = JSON.parse(payload.body);
+            
+            let messageElement = document.createElement('div');
+            messageElement.classList.add('message', 'private');
+            
+            if (message.sender === username) {
+                messageElement.classList.add('sent');
+            } else {
+                messageElement.classList.add('received');
+                
+                // Show notification for received private message if enabled
+                if (!isPageVisible && notifyOnPrivate) {
+                    notificationCount++;
+                    updateNotificationBadge();
+                    showNotification(
+                        'Private Message from ' + message.sender,
+                        message.content
+                    );
+                }
+            }
+            
+            messageElement.textContent = message.sender === username 
+                ? 'You to ' + message.recipient + ': ' + message.content
+                : message.sender + ' (private): ' + message.content;
+            
+            document.getElementById('messageArea').appendChild(messageElement);
+            document.getElementById('messageArea').scrollTop = document.getElementById('messageArea').scrollHeight;
+        }
+        
+
+   document.addEventListener('DOMContentLoaded', function() {
+       const contacts = document.querySelectorAll('.contact-item');
+       const messageInput = document.getElementById('message-input');
+       const sendBtn = document.getElementById('send-btn');
+       const attachBtn = document.getElementById('attach-btn');
+       const chatMessages = document.getElementById('chat-messages');
+       const selectedContactHeader = document.getElementById('selected-contact-header');
+
+       let selectedContact = null;
+
+       // Contact selection handler
+       contacts.forEach(contact => {
+           contact.addEventListener('click', function(event) {
+               // Remove active class from all contacts
+               connect(event);
+               contacts.forEach(c => c.classList.remove('active'));
+               // Add active class to selected contact
+               this.classList.add('active');
+
+               // Get contact details
+               const contactName = this.querySelector('span').textContent;
+               const contactInitials = this.querySelector('.text-inverse-primary').textContent;
+
+               // Update header
+               selectedContactHeader.innerHTML = `
+                   <div class="d-flex align-items-center justify-content-between w-100">
+                       <div class="cursor-pointer symbol symbol-35px">
+                           <div class="symbol symbol-35px">
+                               <div class="symbol-label bg-dark">
+                                   <span class="fs-6 text-inverse-primary">${contactInitials}</span>
+                               </div>
+                           </div>
+                       </div>
+                       <span>${contactName}</span>
+                       <span class="badge badge-success">online</span>
+                   </div>
+               `;
+
+               // Enable input and buttons
+               messageInput.disabled = false;
+               sendBtn.disabled = false;
+               attachBtn.disabled = false;
+
+               // Clear chat messages
+            //    chatMessages.innerHTML = '';
+
+               // Store selected contact
+               selectedContact = {
+                   id: this.dataset.contactId,
+                   name: contactName
+               };
+           });
+       });
+       
+       // Send message handler
+       sendBtn.addEventListener('click', function(event) {
+           if (messageInput.value.trim() && selectedContact) {
+               const message = messageInput.value.trim();
+               const messageElement = document.createElement('div');
+               messageElement.className = 'message sent';
+               messageElement.textContent = message;
+               document.getElementById('messageArea').appendChild(messageElement);
+
+               // Clear input
+               sendMessage(event);
+               messageInput.value = '';
+
+               // Scroll to bottom
+               document.getElementById('messageArea').scrollTop = document.getElementById('messageArea').scrollHeight;
+
+               // Simulate received message (for demo)
+               setTimeout(() => {
+                   const replyElement = document.createElement('div');
+                   replyElement.className = 'message received';
+                   replyElement.textContent = `Reply from ${selectedContact.name}`;
+                   document.getElementById('messageArea').appendChild(replyElement);
+                   document.getElementById('messageArea').scrollTop = document.getElementById('messageArea').scrollHeight;
+               }, 1000);
+           }
+       });
+
+       // Enter key handler
+       messageInput.addEventListener('keypress', function(e) {
+           if (e.key === 'Enter') {
+               sendBtn.click();
+           }
+       });
+   });
 </script>
 </body>
 </html>
